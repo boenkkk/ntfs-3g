@@ -1,0 +1,73 @@
+https://www.reddit.com/r/macsysadmin/comments/1lcsbmz/updated_write_ntfs_on_macos_15_sequoia_macos_26/
+
+UPDATED: Write NTFS on MacOS 15 Sequoia & MacOS 26 Tahoe, without a Kernel Module (Apple Silicon)
+NTFS-MacOS-13-26 UPDATED
+How to write on an NTFS drive on macOS 15 Sequoia and macOS 26 Tahoe, for Apple Silicon, without a kernel module.
+
+If you used my old tutorial, check my github repo for the removal instructions.
+
+This is an update, a better way to do this, thanks to the people at MacOS-Fuse-T
+
+First we need to install some dependencies with homebrew, if you don't have it, check how to install it on https://brew.sh
+
+Let's run these command in the terminal, it will first add the repository needed to install fuse-t, then it will install the dependencies to build ntfs-3G, and it will install fuse-t, which is fuse without the need of a kernel driver. Their site's at https://www.fuse-t.org
+```
+brew tap macos-fuse-t/homebrew-cask
+brew install mounty fuse-t git automake autoconf libtool libgcrypt pkg-config gnutls
+```
+
+Now go into a directory of your choice and run this command, to clone ntfs-3g, the ntfs driver.
+```
+git clone https://github.com/macos-fuse-t/ntfs-3g
+git clone https://github.com/boenkkk/ntfs-3g
+cd ntfs-3g
+```
+
+We'll need to define some flags for it to install properly
+```
+export CPPFLAGS="-I/usr/local/include/fuse"
+export LDFLAGS="-L/usr/local/lib -lfuse-t -Wl,-rpath,/usr/local/lib"
+```
+
+Now run this command, preparing the configuration files
+```
+./autogen.sh
+```
+
+Then, we'll configure it automatically
+```
+./configure  \
+        --prefix=/usr/local \
+        --exec-prefix=/usr/local \
+        --with-fuse=external \
+        --sbindir=/usr/local/bin \
+        --bindir=/usr/local/bin
+```
+
+Now we just need to build/compile it
+```
+make -j"$(sysctl -n hw.ncpu)"
+```
+
+And lastly, we install it
+```
+sudo make install
+```
+
+Now ntfs-3g should be installed.
+
+Now :
+
+Mount your drive using Mounty
+
+We installed Mounty, launch it and agree.
+
+Plug your NTFS drive AFTER LAUNCHING MOUNTY and in the toolbar click on the Mounty icon, then you should see "Re-mount", click on it, then click on "mount automatically".
+
+Now go to finder and you should see a new volume with a computer icon called "fuse-t" containing a folder. This folder is your NTFS drive and you can write in it
+
+Now, when you'll plug your drive and Mounty is launched, it will automatically mount your drive.
+
+If you have any questions or problem, comment, or open an issue on Github, or contact me by mail at leodomecbialek@outlook.fr
+
+Thnaks :)
